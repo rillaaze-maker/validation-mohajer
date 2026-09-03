@@ -209,12 +209,75 @@
     initTheme();
   }
 
+  /* ── the layer model ────────────────────────────────────────────
+     The question every round has to answer is not "did they like it" but
+     WHICH LAYER stopped them. A stop caused by not understanding the point
+     is a value problem; not knowing how is a usability problem; knowing how
+     but not daring is trust; daring but not caring is motivation. They need
+     completely different fixes, and averaging them together hides all four.
+
+     These are asked after every task, in every study, identical wording —
+     so answers stay comparable across tasks, studies and rounds. They are
+     built in, not authored, which is also why making a study is now short. */
+  const LAYERS = {
+    value:      { label: 'ارزش',        color: '#7C4DBC', fix: 'پیام و جایگاه محصول' },
+    usability:  { label: 'کاربردپذیری', color: '#2E7DD1', fix: 'جریان و رابط کاربری' },
+    trust:      { label: 'اعتماد',      color: '#C4562B', fix: 'اثبات، کنترل و پشتوانه' },
+    motivation: { label: 'انگیزه',      color: '#8A8F98', fix: 'انتخاب سگمنت یا wedge' }
+  };
+
+  const STOP_Q = {
+    id: '_stop',
+    text: 'اگر جایی مکث کردید، نزدیک‌ترین دلیلش کدام بود؟',
+    options: [
+      { label: 'جایی گیر نکردم',                     layer: null },
+      { label: 'نفهمیدم اصلاً به چه دردم می‌خورد',    layer: 'value' },
+      { label: 'فهمیدم، ولی نمی‌دانستم چطور انجامش دهم', layer: 'usability' },
+      { label: 'بلد بودم، ولی مطمئن نبودم',           layer: 'trust' },
+      { label: 'مطمئن بودم، ولی برایم مهم نبود',      layer: 'motivation' }
+    ]
+  };
+
+  const GO_Q = {
+    id: '_go',
+    text: 'اگر واقعی بود، ادامه می‌دادید؟',
+    options: [
+      { label: 'بله', v: 'yes' },
+      { label: 'شاید', v: 'maybe' },
+      { label: 'نه', v: 'no' }
+    ]
+  };
+
+  /* Counts stops by layer across every session, and names the bottleneck.
+     Deliberately refuses to answer below three qualified sessions. */
+  function layerTally(sessions){
+    const t = { value: 0, usability: 0, trust: 0, motivation: 0, clean: 0 };
+    let total = 0;
+    sessions.forEach(s => (s.tasks || []).forEach(task => {
+      if (!task.stop) return;
+      total++;
+      if (task.stop === 'none') t.clean++; else if (t[task.stop] != null) t[task.stop]++;
+    }));
+    const stops = total - t.clean;
+    const ranked = Object.keys(LAYERS)
+      .map(k => ({ k, n: t[k], pct: stops ? Math.round(t[k] / stops * 100) : 0 }))
+      .sort((a, b) => b.n - a.n);
+    return { t, total, stops, ranked, top: ranked[0] && ranked[0].n ? ranked[0] : null };
+  }
+
+  function goTally(sessions){
+    const g = { yes: 0, maybe: 0, no: 0 };
+    sessions.forEach(s => (s.tasks || []).forEach(t => { if (t.go && g[t.go] != null) g[t.go]++; }));
+    return g;
+  }
+
   const qs = (k) => new URLSearchParams(location.search).get(k);
 
   global.App = {
     $, $$, el, esc, fa, mmss, dateFa, store, qs,
     loadRegistry, loadStudy, saveStudy, blankStudy,
     newSession, saveSession, allSessions, newCode,
-    download, copy, postWebhook, toCSV, mountChrome, initTheme
+    download, copy, postWebhook, toCSV, mountChrome, initTheme,
+    LAYERS, STOP_Q, GO_Q, layerTally, goTally
   };
 })(window);
