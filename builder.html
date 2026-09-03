@@ -3,85 +3,111 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ساخت مطالعه · سنجه</title>
+<title>مطالعهٔ جدید · سنجه</title>
 <link rel="stylesheet" href="./assets/app.css">
 <style>
-  .item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
-    padding:15px;margin-bottom:10px}
-  .item .top{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-  .item .top .idx{width:24px;height:24px;border-radius:7px;background:var(--surface-2);
-    display:grid;place-items:center;font-size:11.5px;font-weight:600;flex:none}
-  .opts{margin-top:8px}
-  .opt{display:flex;gap:7px;align-items:center;margin-bottom:6px}
-  .opt .input{flex:1}
-  .opt .sc{width:74px;flex:none}
-  .score{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600}
-  .meter{width:56px;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-  .meter i{display:block;height:100%;border-radius:99px;transition:width .4s var(--spring)}
+  .step{display:flex;gap:14px;margin-bottom:26px}
+  .step .n{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--canvas);
+    display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;margin-top:2px}
+  .step .b{flex:1;min-width:0}
+  .step h2{font-size:16px;margin-bottom:3px}
+  .step .s{font-size:12px;color:var(--ink-3);margin-bottom:11px}
+  .trow{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+  .trow .n{width:22px;height:22px;border-radius:6px;background:var(--surface-2);flex:none;
+    display:grid;place-items:center;font-size:11px;font-weight:600;margin-top:10px}
+  .trow .f{flex:1;min-width:0}
+  .trow .f input{margin-bottom:5px}
+  details.adv{margin-top:8px}
+  details.adv>summary{cursor:pointer;font-size:12.5px;font-weight:500;color:var(--ink-2);
+    list-style:none;padding:9px 0}
+  details.adv>summary::-webkit-details-marker{display:none}
+  details.adv>summary::before{content:'▸ ';color:var(--ink-3)}
+  details.adv[open]>summary::before{content:'▾ '}
+  .lint{margin:4px 0 2px}
+  .flag{padding:7px 10px;font-size:11.5px}
+  .sticky{position:sticky;bottom:0;background:color-mix(in srgb,var(--canvas) 92%,transparent);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:14px 0;margin-top:24px}
 </style>
 </head>
 <body>
-<main class="wrap" style="padding-top:30px">
-  <h1 style="font-size:26px">ساخت مطالعه</h1>
-  <p class="lead" style="margin-top:8px">
-    هر سؤالی که می‌نویسید همان لحظه از فیلتر Mom Test رد می‌شود.
-    هدف این نیست که سخت‌گیری کند — هدف این است که جوابی که می‌گیرید قابل استناد باشد.
-  </p>
+<main class="wrap narrow" style="padding-top:30px">
+  <h1 style="font-size:24px">مطالعهٔ جدید</h1>
+  <p class="lead" style="margin:6px 0 26px">سه قدم. بقیه‌اش آماده است.</p>
 
-  <div class="sec">پایه</div>
-  <div class="card">
-    <div class="grid c2">
-      <div class="field"><label>نام مطالعه</label>
-        <input class="input" id="f-name" placeholder="مثلاً مهاجر · آشیانه v2"></div>
-      <div class="field"><label>محصول</label>
-        <input class="input" id="f-product" placeholder="نام محصولی که تست می‌شود"></div>
+  <div class="step">
+    <div class="n num">۱</div>
+    <div class="b">
+      <h2>چه چیزی را تست می‌کنیم؟</h2>
+      <div class="s">اسم و آدرس پروتوتایپ.</div>
+      <div class="field"><input class="input" id="f-name" placeholder="اسم مطالعه — مثلاً «آشیانه v2»"></div>
+      <div class="field"><input class="input en" id="f-url" dir="ltr" placeholder="https://…"></div>
+      <p id="urlwarn" class="hint"></p>
     </div>
-    <div class="field"><label>آدرس پروتوتایپ <span class="tiny">— هر صفحهٔ وبی که در iframe باز شود</span></label>
-      <input class="input en" id="f-url" dir="ltr" placeholder="https://…"></div>
-    <div class="field"><label>متن معرفی که شرکت‌کننده می‌بیند</label>
-      <textarea class="input" id="f-intro" rows="3"
-        placeholder="Context بدهید، نه Persuasion. بگویید چه نوع محصولی است؛ نگویید چرا خوب است."></textarea>
-      <p class="hint">قاعدهٔ پروتکل: توضیح دستهٔ محصول و کارش مجاز است؛ توضیح مزیت و دلیل اعتماد نه.</p></div>
+  </div>
+
+  <div class="step">
+    <div class="n num">۲</div>
+    <div class="b">
+      <h2>چه کارهایی انجام دهند؟</h2>
+      <div class="s">هر تسک یک کار. دستور را خنثی بنویسید — راه را نشان ندهید.</div>
+      <div id="tasks"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addTask()">+ تسک</button>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="n num">۳</div>
+    <div class="b">
+      <h2>چه کسی واجد شرایط است؟</h2>
+      <div class="s">یکی را بردارید یا رد شوید. بر پایهٔ کاری که طرف کرده، نه چیزی که می‌گوید هست.</div>
+      <div class="chipset" id="tpl" style="margin-bottom:12px"></div>
+      <div id="scrs"></div>
+      <details class="adv"><summary>ویرایش دستی سؤال‌های غربالگری</summary>
+        <div id="scr-edit"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addScr()">+ سؤال</button>
+        <div class="field" style="max-width:200px;margin-top:10px"><label>حد قبولی امتیاز</label>
+          <input class="input num" id="f-pass" type="number" value="0"></div>
+      </details>
+    </div>
+  </div>
+
+  <div class="note" style="margin-bottom:8px">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+    <p><b>این‌ها خودکار اضافه می‌شوند:</b> بعد از هر تسک سه سؤال یک‌کلیکی می‌پرسیم —
+      توانست یا نه، چه چیزی متوقفش کرد (ارزش / کاربردپذیری / اعتماد / انگیزه)، و اگر واقعی بود ادامه می‌داد یا نه.
+      همین سه تا در «نتایج» می‌گویند گلوگاه کجاست.</p>
+  </div>
+
+  <details class="adv">
+    <summary>تنظیمات بیشتر — فرضیه‌ها، سؤال‌های پایانی، webhook</summary>
+    <div class="field" style="margin-top:10px"><label>متن معرفی برای شرکت‌کننده</label>
+      <textarea class="input" id="f-intro" rows="2"
+        placeholder="بگویید چه نوع محصولی است. نگویید چرا خوب است."></textarea></div>
     <div class="grid c2">
+      <div class="field"><label>محصول</label><input class="input" id="f-product"></div>
       <div class="field"><label>نشانه</label><input class="input" id="f-icon" value="◆" maxlength="2"></div>
-      <div class="field"><label>Webhook <span class="tiny">— اختیاری</span></label>
-        <input class="input en" id="f-hook" dir="ltr" placeholder="https://…"></div>
     </div>
+    <div class="field"><label>Webhook برای جمع‌آوری خودکار</label>
+      <input class="input en" id="f-hook" dir="ltr" placeholder="https://…"></div>
+    <div class="sec" style="margin-top:14px">فرضیه‌ها
+      <button class="btn btn-ghost btn-sm" onclick="addHyp()">+</button></div>
+    <div id="hyps"></div>
+    <div class="sec">سؤال‌های پایانی
+      <button class="btn btn-ghost btn-sm" onclick="addPost()">+</button></div>
+    <div id="posts"></div>
+  </details>
+
+  <div class="sticky">
+    <div class="row-btns">
+      <button class="btn btn-primary" onclick="save()">ذخیره و ساخت لینک</button>
+      <button class="btn btn-line" onclick="exportStudy()">خروجی JSON</button>
+      <label class="btn btn-line" style="cursor:pointer">وارد کردن
+        <input type="file" accept="application/json" hidden onchange="importStudy(event)"></label>
+      <button class="btn btn-danger" onclick="del()" id="del-btn" hidden>حذف</button>
+    </div>
+    <p id="saved" class="tiny" style="margin-top:7px"></p>
   </div>
-
-  <div class="sec">فرضیه‌ها <button class="btn btn-ghost btn-sm" onclick="addHyp()">افزودن</button></div>
-  <div id="hyps"></div>
-
-  <div class="sec">غربالگری
-    <button class="btn btn-ghost btn-sm" onclick="addScr()">افزودن سؤال</button></div>
-  <div class="note" style="margin-bottom:12px">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
-    <p>غربالگری را بر پایهٔ <b>کاری که طرف واقعاً کرده</b> بنویسید، نه چیزی که می‌گوید هست.
-      «آخرین بار کِی این کار را کردید؟» سگمنت را پیدا می‌کند؛ «آیا به این موضوع علاقه دارید؟» نه.
-      هر گزینه می‌تواند امتیاز داشته باشد یا <b>حذف‌کننده</b> باشد.</p>
-  </div>
-  <div class="field" style="max-width:220px"><label>حد قبولی امتیاز</label>
-    <input class="input num" id="f-pass" type="number" value="0"></div>
-  <div id="scrs"></div>
-
-  <div class="sec">تسک‌ها <button class="btn btn-ghost btn-sm" onclick="addTask()">افزودن تسک</button></div>
-  <div id="tasks"></div>
-
-  <div class="sec">سؤال‌های پایانی
-    <button class="btn btn-ghost btn-sm" onclick="addPost()">افزودن سؤال</button></div>
-  <div id="posts"></div>
-
-  <div class="row-btns" style="margin:26px 0 8px">
-    <button class="btn btn-primary" onclick="save()">ذخیره</button>
-    <button class="btn btn-line" onclick="exportStudy()">خروجی JSON</button>
-    <label class="btn btn-line" style="cursor:pointer">
-      وارد کردن JSON<input type="file" accept="application/json" hidden onchange="importStudy(event)"></label>
-    <button class="btn btn-danger" onclick="del()" id="del-btn" hidden>حذف</button>
-  </div>
-  <p id="saved" class="tiny"></p>
-  <footer class="site">مطالعه‌های ساخته‌شده اینجا در همین مرورگر ذخیره می‌شوند.
-    برای اینکه در مخزن بماند و بقیه هم ببینند، خروجی JSON را در پوشهٔ <b class="en">studies/</b> بگذارید
-    و در <b class="en">studies/index.json</b> ثبتش کنید.</footer>
+  <div style="height:20px"></div>
 </main>
 
 <script src="./assets/app.js"></script>
@@ -90,107 +116,172 @@
 App.mountChrome('builder.html');
 let D = null;
 
+/* Ready-made screeners. Most teams need one of these three and should not
+   have to invent scoring rules to get started. Every option is behavioural. */
+const TEMPLATES = {
+  money: {
+    label: 'کسی که پول جابه‌جا کرده',
+    intro: 'چند سؤال کوتاه دربارهٔ کارهایی که تا حالا کرده‌اید.',
+    passScore: 5,
+    questions: [
+      { id:'s1', text:'آخرین بار کِی بخشی از پولتان را از ریال خارج کردید یا دلاری نگه داشتید؟',
+        type:'single', required:true, options:[
+        {label:'در سه ماه گذشته',score:3},{label:'در یک سال گذشته',score:2},
+        {label:'بیشتر از یک سال پیش',score:0},{label:'تا حالا نکرده‌ام',score:0,disqualify:true}]},
+      { id:'s2', text:'آن بار تقریباً چه مبلغی بود؟', type:'single', required:true, options:[
+        {label:'کمتر از ۵۰ میلیون تومان',score:1},{label:'۵۰ تا ۲۰۰ میلیون تومان',score:3},
+        {label:'بیشتر از ۲۰۰ میلیون تومان',score:3},{label:'ترجیح می‌دهم نگویم',score:1}]},
+      { id:'s3', text:'کدام دربارهٔ شما درست است؟', type:'single', required:true, options:[
+        {label:'در تیم هستم یا با تیم کار می‌کنم',score:0,disqualify:true},
+        {label:'دوست یا فامیل نزدیک تیم هستم',score:0,disqualify:true},
+        {label:'ارتباطی با تیم ندارم',score:2}]}
+    ]
+  },
+  buyer: {
+    label: 'کسی که خرید خارجی کرده',
+    intro: 'چند سؤال کوتاه دربارهٔ خریدهای اخیرتان.',
+    passScore: 4,
+    questions: [
+      { id:'s1', text:'در شش ماه گذشته برای کدام واقعاً پول خارجی پرداخت کرده‌اید؟',
+        type:'multi', required:true, options:[
+        {label:'اشتراک نرم‌افزار یا سرویس خارجی',score:3},{label:'خرید از سایت خارجی',score:2},
+        {label:'شهریه یا هزینهٔ مهاجرت',score:3},{label:'هیچ‌کدام',score:0,disqualify:true}]},
+      { id:'s2', text:'آن بار چطور پرداخت کردید؟', type:'single', required:true, options:[
+        {label:'خودم مستقیم',score:3},{label:'از طریق واسطه یا دوست',score:2},
+        {label:'یادم نیست',score:0}]},
+      { id:'s3', text:'کدام دربارهٔ شما درست است؟', type:'single', required:true, options:[
+        {label:'در تیم هستم یا با تیم کار می‌کنم',score:0,disqualify:true},
+        {label:'ارتباطی با تیم ندارم',score:2}]}
+    ]
+  },
+  clean: {
+    label: 'فقط جدا کردن آشناهای تیم',
+    intro: 'یک سؤال کوتاه.',
+    passScore: 1,
+    questions: [
+      { id:'s1', text:'کدام دربارهٔ شما درست است؟', type:'single', required:true, options:[
+        {label:'در تیم هستم یا با تیم کار می‌کنم',score:0,disqualify:true},
+        {label:'دوست یا فامیل نزدیک تیم هستم',score:0,disqualify:true},
+        {label:'ارتباطی با تیم ندارم',score:2}]}
+    ]
+  }
+};
+
 (async function(){
   const id = App.qs('id');
   D = id ? await App.loadStudy(id) : null;
-  if (!D) D = App.blankStudy(); else App.$('del-btn').hidden = D._source !== 'local';
+  if (!D) { D = App.blankStudy(); D.tasks = [{ id:'t1', title:'', prompt:'', hypothesis:'' }]; }
+  else App.$('del-btn').hidden = D._source !== 'local';
   fill(); renderAll();
 })();
 
 function fill(){
   App.$('f-name').value    = D.name || '';
-  App.$('f-product').value = D.product || '';
   App.$('f-url').value     = D.prototypeUrl || '';
+  App.$('f-product').value = D.product || '';
   App.$('f-intro').value   = D.intro || '';
   App.$('f-icon').value    = D.icon || '◆';
   App.$('f-hook').value    = D.settings?.webhook || '';
   App.$('f-pass').value    = D.screener?.passScore ?? 0;
+  App.$('f-url').addEventListener('input', urlCheck);
+  urlCheck();
+}
+/* A prototype that refuses framing is the single most common way a study
+   comes out broken, and it is invisible until a participant opens it. */
+function urlCheck(){
+  const v = App.$('f-url').value.trim(), n = App.$('urlwarn');
+  if (!v) { n.textContent = ''; return; }
+  if (!/^https:\/\//i.test(v)) { n.innerHTML = '<b style="color:var(--warn)">باید با https شروع شود</b> وگرنه در قاب باز نمی‌شود.'; return; }
+  n.textContent = 'قبل از فرستادن لینک، یک‌بار خودتان جلسه را باز کنید تا مطمئن شوید پروتوتایپ در قاب می‌آید.';
 }
 
-/* ── the linter, rendered under any question field ──────────────── */
-function lintBox(text){
-  const r = MomTest.lint(text);
-  if (!text.trim()) return '';
-  const colour = r.score >= 75 ? 'var(--ok)' : r.score >= 45 ? 'var(--warn)' : 'var(--bad)';
-  const rows = r.flags.map(f => `<div class="flag ${f.level}">
-      <span>${f.level === 'good' ? '✓' : f.level === 'err' ? '✕' : '!'}</span>
-      <span class="m"><span class="why">${App.esc(f.label)} — ${App.esc(f.why)}</span>
-        ${f.fix ? `<span class="fix">${App.esc(f.fix)}${f.example && f.example !== '—'
-          ? ` <i>${App.esc(f.example)}</i>` : ''}</span>` : ''}</span>
-    </div>`).join('');
-  return `<div class="lint">
-    <div class="score" style="color:${colour}">
-      <span class="meter"><i style="width:${r.score}%;background:${colour}"></i></span>
-      ${App.fa(r.score)}٪ ${r.ok ? 'قابل‌استفاده' : 'نیاز به بازنویسی'}
-    </div>${rows}</div>`;
-}
-function wireLint(inputEl, boxEl){
-  const run = () => boxEl.innerHTML = lintBox(inputEl.value);
-  inputEl.addEventListener('input', run); run();
+/* ── the linter, compact ────────────────────────────────────────── */
+function lintInto(input, box){
+  const run = () => {
+    const r = MomTest.lint(input.value);
+    if (!input.value.trim() || (r.ok && !r.flags.length)) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="lint">${r.flags.filter(f => f.level !== 'good').map(f =>
+      `<div class="flag ${f.level}"><span class="m"><b>${App.esc(f.label)}</b> — ${App.esc(f.fix)}</span></div>`
+    ).join('')}</div>`;
+  };
+  input.addEventListener('input', run); run();
 }
 
-/* ── hypotheses ─────────────────────────────────────────────────── */
-function renderHyps(){
-  const host = App.$('hyps');
-  host.innerHTML = (D.hypotheses || []).map((h, i) => `<div class="item">
-    <div class="top"><div class="idx en">${h.id || 'H' + (i + 1)}</div>
-      <input class="input" value="${App.esc(h.text)}" oninput="D.hypotheses[${i}].text=this.value">
-      <select class="input" style="width:130px;flex:none" onchange="D.hypotheses[${i}].risk=this.value">
-        ${['very-high','high','medium-high','medium'].map(v =>
-          `<option value="${v}"${h.risk === v ? ' selected' : ''}>${
-            {'very-high':'ریسک خیلی بالا','high':'ریسک بالا','medium-high':'متوسط تا بالا','medium':'متوسط'}[v]}</option>`).join('')}
-      </select>
-      <button class="btn btn-danger btn-sm" onclick="D.hypotheses.splice(${i},1);renderHyps()">×</button>
-    </div></div>`).join('') || '<p class="tiny">هنوز فرضیه‌ای اضافه نشده.</p>';
+/* ── tasks ──────────────────────────────────────────────────────── */
+function renderTasks(){
+  D.tasks = D.tasks || [];
+  App.$('tasks').innerHTML = D.tasks.map((t, i) => `<div class="trow">
+    <div class="n num">${App.fa(i + 1)}</div>
+    <div class="f">
+      <input class="input" value="${App.esc(t.title)}" placeholder="عنوان — مثلاً «اولین ورود پول»"
+        oninput="D.tasks[${i}].title=this.value">
+      <input class="input" id="tp-${i}" value="${App.esc(t.prompt)}"
+        placeholder="چه کاری بکند — مثلاً «کاری را که طبیعی است انجام دهید و بلند فکر کنید»"
+        oninput="D.tasks[${i}].prompt=this.value">
+      <div id="tl-${i}"></div>
+    </div>
+    <button class="btn btn-danger btn-sm" style="margin-top:4px"
+      onclick="D.tasks.splice(${i},1);renderAll()">×</button>
+  </div>`).join('');
+  D.tasks.forEach((t, i) => {
+    const inp = App.$('tp-' + i), box = App.$('tl-' + i);
+    if (inp && box) lintInto(inp, box);
+  });
 }
-window.addHyp = () => {
-  D.hypotheses = D.hypotheses || [];
-  D.hypotheses.push({ id: 'H' + (D.hypotheses.length + 1), text: '', risk: 'high' });
-  renderHyps();
+window.addTask = () => {
+  D.tasks = D.tasks || [];
+  D.tasks.push({ id: 't' + (D.tasks.length + 1), title: '', prompt: '', hypothesis: '' });
+  renderAll();
 };
 
-/* ── question editors (screener / post) ─────────────────────────── */
-function qEditor(q, i, listName){
-  const opts = (q.options || []).map((o, oi) => `<div class="opt">
-      <input class="input" value="${App.esc(o.label)}"
-        oninput="${listName}[${i}].options[${oi}].label=this.value">
-      <input class="input num sc" type="number" value="${o.score ?? 0}" title="امتیاز"
-        oninput="${listName}[${i}].options[${oi}].score=+this.value">
-      <button class="chip" aria-pressed="${!!o.disqualify}" title="حذف‌کننده"
-        onclick="${listName}[${i}].options[${oi}].disqualify=!${listName}[${i}].options[${oi}].disqualify;renderAll()">حذفی</button>
-      <button class="btn btn-danger btn-sm" onclick="${listName}[${i}].options.splice(${oi},1);renderAll()">×</button>
-    </div>`).join('');
-  const isChoice = q.type === 'single' || q.type === 'multi';
-  return `<div class="item">
-    <div class="top">
-      <div class="idx num">${App.fa(i + 1)}</div>
-      <div style="flex:1">
-        <input class="input" id="q-${listName}-${i}" value="${App.esc(q.text)}"
-          placeholder="متن سؤال" oninput="${listName}[${i}].text=this.value">
-        <div id="lint-${listName}-${i}"></div>
-      </div>
-      <select class="input" style="width:118px;flex:none" onchange="${listName}[${i}].type=this.value;renderAll()">
-        ${[['single','تک‌گزینه'],['multi','چندگزینه'],['text','متن آزاد'],['number','عدد']]
-          .map(([v,t]) => `<option value="${v}"${q.type === v ? ' selected' : ''}>${t}</option>`).join('')}
-      </select>
-      <button class="chip" aria-pressed="${!!q.required}"
-        onclick="${listName}[${i}].required=!${listName}[${i}].required;renderAll()">لازم</button>
-      <button class="btn btn-danger btn-sm" onclick="${listName}.splice(${i},1);renderAll()">×</button>
-    </div>
-    ${isChoice ? `<div class="opts">${opts}
-      <button class="btn btn-ghost btn-sm" onclick="${listName}[${i}].options=(${listName}[${i}].options||[]).concat([{label:'',score:0}]);renderAll()">
-        افزودن گزینه</button></div>` : ''}
-  </div>`;
+/* ── screener ───────────────────────────────────────────────────── */
+function renderTpl(){
+  App.$('tpl').innerHTML = Object.entries(TEMPLATES).map(([k, t]) =>
+    `<button class="chip" data-k="${k}" onclick="useTpl('${k}')">${App.esc(t.label)}</button>`).join('') +
+    `<button class="chip" onclick="useTpl('')">بدون غربالگری</button>`;
 }
-
-function renderScrs(){
-  D.screener = D.screener || { questions: [] };
-  const L = D.screener.questions;
-  App.$('scrs').innerHTML = L.map((q, i) => qEditor(q, i, 'D.screener.questions')).join('')
-    || '<p class="tiny">هنوز سؤالی اضافه نشده.</p>';
-  L.forEach((q, i) => {
-    const inp = App.$(`q-D.screener.questions-${i}`), box = App.$(`lint-D.screener.questions-${i}`);
-    if (inp && box) wireLint(inp, box);
+window.useTpl = (k) => {
+  D.screener = k ? JSON.parse(JSON.stringify(TEMPLATES[k])) : { intro: '', questions: [], passScore: 0 };
+  delete D.screener.label;
+  App.$('f-pass').value = D.screener.passScore || 0;
+  renderAll();
+};
+function renderScrSummary(){
+  const qs = D.screener?.questions || [];
+  App.$('scrs').innerHTML = qs.length
+    ? `<div class="card flat" style="padding:13px 15px">
+        ${qs.map((q, i) => `<div class="kv"><span class="k">${App.fa(i + 1)}. ${App.esc(q.text)}</span>
+          <span class="v tiny">${q.options?.some(o => o.disqualify)
+            ? '<span class="badge b-bad">حذفی دارد</span>' : ''}</span></div>`).join('')}
+      </div>`
+    : '<p class="tiny">بدون غربالگری — همه وارد جلسه می‌شوند.</p>';
+}
+function renderScrEdit(){
+  const qs = D.screener?.questions || [];
+  App.$('scr-edit').innerHTML = qs.map((q, i) => `<div class="trow">
+    <div class="n num">${App.fa(i + 1)}</div>
+    <div class="f">
+      <input class="input" id="sq-${i}" value="${App.esc(q.text)}" placeholder="متن سؤال"
+        oninput="D.screener.questions[${i}].text=this.value">
+      <div id="sl-${i}"></div>
+      ${(q.options || []).map((o, oi) => `<div style="display:flex;gap:6px;margin-bottom:4px">
+        <input class="input" value="${App.esc(o.label)}" placeholder="گزینه"
+          oninput="D.screener.questions[${i}].options[${oi}].label=this.value">
+        <input class="input num" style="width:64px" type="number" value="${o.score ?? 0}" title="امتیاز"
+          oninput="D.screener.questions[${i}].options[${oi}].score=+this.value">
+        <button class="chip" aria-pressed="${!!o.disqualify}" title="حذف‌کننده"
+          onclick="D.screener.questions[${i}].options[${oi}].disqualify=!D.screener.questions[${i}].options[${oi}].disqualify;renderAll()">حذفی</button>
+        <button class="btn btn-danger btn-sm" onclick="D.screener.questions[${i}].options.splice(${oi},1);renderAll()">×</button>
+      </div>`).join('')}
+      <button class="btn btn-ghost btn-sm"
+        onclick="D.screener.questions[${i}].options=(D.screener.questions[${i}].options||[]).concat([{label:'',score:0}]);renderAll()">+ گزینه</button>
+    </div>
+    <button class="btn btn-danger btn-sm" style="margin-top:4px"
+      onclick="D.screener.questions.splice(${i},1);renderAll()">×</button>
+  </div>`).join('');
+  qs.forEach((q, i) => {
+    const inp = App.$('sq-' + i), box = App.$('sl-' + i);
+    if (inp && box) lintInto(inp, box);
   });
 }
 window.addScr = () => {
@@ -201,72 +292,70 @@ window.addScr = () => {
   renderAll();
 };
 
+/* ── advanced ───────────────────────────────────────────────────── */
+function renderHyps(){
+  D.hypotheses = D.hypotheses || [];
+  App.$('hyps').innerHTML = D.hypotheses.map((h, i) => `<div class="trow">
+    <div class="n en">${h.id}</div>
+    <div class="f"><input class="input" value="${App.esc(h.text)}"
+      oninput="D.hypotheses[${i}].text=this.value" placeholder="فرضیه"></div>
+    <button class="btn btn-danger btn-sm" style="margin-top:4px"
+      onclick="D.hypotheses.splice(${i},1);renderAll()">×</button>
+  </div>`).join('') || '<p class="tiny">اختیاری.</p>';
+}
+window.addHyp = () => {
+  D.hypotheses = D.hypotheses || [];
+  D.hypotheses.push({ id: 'H' + (D.hypotheses.length + 1), text: '', risk: 'high' });
+  renderAll();
+};
 function renderPosts(){
   D.postQuestions = D.postQuestions || [];
-  App.$('posts').innerHTML = D.postQuestions.map((q, i) => qEditor(q, i, 'D.postQuestions')).join('')
-    || '<p class="tiny">هنوز سؤالی اضافه نشده.</p>';
+  App.$('posts').innerHTML = D.postQuestions.map((q, i) => `<div class="trow">
+    <div class="n num">${App.fa(i + 1)}</div>
+    <div class="f"><input class="input" id="pq-${i}" value="${App.esc(q.text)}"
+      oninput="D.postQuestions[${i}].text=this.value" placeholder="سؤال پایانی">
+      <div id="pl-${i}"></div></div>
+    <button class="btn btn-danger btn-sm" style="margin-top:4px"
+      onclick="D.postQuestions.splice(${i},1);renderAll()">×</button>
+  </div>`).join('') || '<p class="tiny">اختیاری.</p>';
   D.postQuestions.forEach((q, i) => {
-    const inp = App.$(`q-D.postQuestions-${i}`), box = App.$(`lint-D.postQuestions-${i}`);
-    if (inp && box) wireLint(inp, box);
+    const inp = App.$('pq-' + i), box = App.$('pl-' + i);
+    if (inp && box) lintInto(inp, box);
   });
 }
 window.addPost = () => {
   D.postQuestions = D.postQuestions || [];
-  D.postQuestions.push({ id: 'q' + (D.postQuestions.length + 1), text: '', type: 'text', required: true });
+  D.postQuestions.push({ id: 'q' + (D.postQuestions.length + 1), text: '', type: 'text', required: false });
   renderAll();
 };
 
-/* ── tasks ──────────────────────────────────────────────────────── */
-function renderTasks(){
-  D.tasks = D.tasks || [];
-  App.$('tasks').innerHTML = D.tasks.map((t, i) => `<div class="item">
-    <div class="top"><div class="idx num">${App.fa(i + 1)}</div>
-      <input class="input" value="${App.esc(t.title)}" placeholder="عنوان تسک"
-        oninput="D.tasks[${i}].title=this.value">
-      <select class="input" style="width:104px;flex:none" onchange="D.tasks[${i}].hypothesis=this.value">
-        <option value="">— فرضیه —</option>
-        ${(D.hypotheses || []).map(h =>
-          `<option value="${h.id}"${t.hypothesis === h.id ? ' selected' : ''}>${h.id}</option>`).join('')}
-      </select>
-      <button class="btn btn-danger btn-sm" onclick="D.tasks.splice(${i},1);renderAll()">×</button>
-    </div>
-    <textarea class="input" rows="2" placeholder="دستور تسک — خنثی و بدون راهنمایی"
-      oninput="D.tasks[${i}].prompt=this.value">${App.esc(t.prompt)}</textarea>
-    <div id="lint-task-${i}"></div>
-  </div>`).join('') || '<p class="tiny">هنوز تسکی اضافه نشده.</p>';
-  D.tasks.forEach((t, i) => {
-    const box = App.$(`lint-task-${i}`);
-    const ta = box?.previousElementSibling;
-    if (ta && box) wireLint(ta, box);
-  });
-}
-window.addTask = () => {
-  D.tasks = D.tasks || [];
-  D.tasks.push({ id: 't' + (D.tasks.length + 1), title: '', prompt: '', hypothesis: '', followUps: [] });
-  renderAll();
-};
+function renderAll(){ renderTasks(); renderTpl(); renderScrSummary(); renderScrEdit(); renderHyps(); renderPosts(); }
+window.renderAll = renderAll;
 
-window.renderAll = () => { renderHyps(); renderScrs(); renderTasks(); renderPosts(); };
-
-/* ── persistence ────────────────────────────────────────────────── */
+/* ── save ───────────────────────────────────────────────────────── */
 function collect(){
   D.name = App.$('f-name').value.trim();
-  D.product = App.$('f-product').value.trim();
   D.prototypeUrl = App.$('f-url').value.trim();
+  D.product = App.$('f-product').value.trim() || D.name;
   D.intro = App.$('f-intro').value.trim();
   D.icon = App.$('f-icon').value.trim() || '◆';
   D.settings = D.settings || {};
   D.settings.webhook = App.$('f-hook').value.trim();
   D.screener = D.screener || { questions: [] };
   D.screener.passScore = +App.$('f-pass').value || 0;
+  D.tasks = (D.tasks || []).filter(t => t.title || t.prompt);
   return D;
 }
 window.save = () => {
   collect();
-  if (!D.name) { App.$('saved').textContent = 'مطالعه باید نام داشته باشد.'; return; }
+  const msg = App.$('saved');
+  if (!D.name)         { msg.textContent = 'یک اسم بگذارید.'; return; }
+  if (!D.prototypeUrl) { msg.textContent = 'آدرس پروتوتایپ لازم است.'; return; }
+  if (!D.tasks.length) { msg.textContent = 'حداقل یک تسک لازم است.'; return; }
   App.saveStudy(D);
-  App.$('saved').innerHTML = 'ذخیره شد ✓ — <a href="study.html?id=' +
-    encodeURIComponent(D.id) + '">رفتن به صفحهٔ مطالعه</a>';
+  const link = location.href.replace(/\/[^\/]*$/, '/') + 'run.html?id=' + encodeURIComponent(D.id);
+  msg.innerHTML = `ذخیره شد ✓ &nbsp; <a href="study.html?id=${encodeURIComponent(D.id)}">صفحهٔ مطالعه</a>
+    &nbsp;·&nbsp; <a href="${App.esc(link)}" target="_blank">باز کردن جلسه</a>`;
 };
 window.exportStudy = () => {
   collect(); const c = { ...D }; delete c._source;
@@ -276,19 +365,15 @@ window.importStudy = (e) => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = () => {
-    try {
-      const j = JSON.parse(r.result);
-      if (!j.id) j.id = App.blankStudy().id;
-      D = j; fill(); renderAll();
-      App.$('saved').textContent = 'وارد شد — برای نگه‌داشتن، ذخیره کنید.';
-    } catch (err) { App.$('saved').textContent = 'این فایل خوانده نشد: ' + err.message; }
+    try { const j = JSON.parse(r.result); if (!j.id) j.id = App.blankStudy().id;
+      D = j; fill(); renderAll(); App.$('saved').textContent = 'وارد شد — ذخیره کنید.'; }
+    catch (err) { App.$('saved').textContent = 'خوانده نشد: ' + err.message; }
   };
   r.readAsText(f);
 };
 window.del = () => {
-  if (!confirm('این مطالعه از همین مرورگر حذف شود؟')) return;
-  App.store.del('study.' + D.id);
-  location.href = 'index.html';
+  if (!confirm('حذف شود؟')) return;
+  App.store.del('study.' + D.id); location.href = 'index.html';
 };
 </script>
 </body>

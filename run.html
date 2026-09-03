@@ -240,38 +240,63 @@ function tasks(){
             <span class="dot"></span>بلند فکر کنید — هر چیزی که از ذهنتان می‌گذرد.
           </div>
           <div class="field" style="margin-top:18px">
-            <label>اگر چیزی اینجا گیجتان کرد یا متوقفتان کرد، بنویسید</label>
-            <textarea class="input" id="t-note" rows="3" placeholder="اختیاری"></textarea>
-          </div>
-          <div class="field">
-            <label>این تسک را توانستید انجام دهید؟</label>
+            <label>توانستید انجامش دهید؟</label>
             <div class="chipset" id="t-out">
               <button class="chip" data-v="done">بله</button>
               <button class="chip" data-v="partial">تا حدی</button>
-              <button class="chip" data-v="stuck">نه، گیر کردم</button>
-              <button class="chip" data-v="wouldnt">در واقعیت ادامه نمی‌دادم</button>
+              <button class="chip" data-v="stuck">نه</button>
             </div>
           </div>
-          <button class="btn btn-primary btn-block" style="margin-top:6px" onclick="nextTask()">
+          <div class="field">
+            <label>${App.STOP_Q.text}</label>
+            <div class="chipset" id="t-stop">
+              ${App.STOP_Q.options.map((o, k) =>
+                `<button class="chip" data-v="${o.layer || 'none'}">${App.esc(o.label)}</button>`).join('')}
+            </div>
+          </div>
+          <div class="field">
+            <label>${App.GO_Q.text}</label>
+            <div class="chipset" id="t-go">
+              ${App.GO_Q.options.map(o => `<button class="chip" data-v="${o.v}">${App.esc(o.label)}</button>`).join('')}
+            </div>
+          </div>
+          <div class="field">
+            <input class="input" id="t-note" placeholder="چیزی بگویید؟ (اختیاری)">
+          </div>
+          <button class="btn btn-primary btn-block" id="t-next" style="margin-top:6px" onclick="nextTask()">
             ${ti + 1 < S.tasks.length ? 'تسک بعدی' : 'ادامه به سؤال‌های پایانی'}</button>
         </div>
       </div>
       ${device()}
     </div>`;
-  App.$$('#t-out .chip').forEach(c => c.onclick = () => {
-    App.$$('#t-out .chip').forEach(o => o.setAttribute('aria-pressed', 'false'));
+  ['t-out', 't-stop', 't-go'].forEach(g => App.$$('#' + g + ' .chip').forEach(c => c.onclick = () => {
+    App.$$('#' + g + ' .chip').forEach(o => o.setAttribute('aria-pressed', 'false'));
     c.setAttribute('aria-pressed', 'true');
-  });
+    gate();
+  }));
+  gate();
   taskStart = Date.now();
+}
+
+const pickOf = (g) => {
+  const n = document.querySelector('#' + g + ' .chip[aria-pressed="true"]');
+  return n ? n.dataset.v : null;
+};
+/* All three taps are required. They take three seconds and they are the
+   whole diagnosis — a task with no attributed cause tells us nothing. */
+function gate(){
+  const btn = App.$('t-next'); if (!btn) return;
+  btn.disabled = !(pickOf('t-out') && pickOf('t-stop') && pickOf('t-go'));
 }
 
 window.nextTask = () => {
   const t = S.tasks[ti];
-  const picked = document.querySelector('#t-out .chip[aria-pressed="true"]');
   sess.tasks.push({
     id: t.id, title: t.title, hypothesis: t.hypothesis,
     ms: Date.now() - taskStart,
-    outcome: picked ? picked.dataset.v : null,
+    outcome: pickOf('t-out'),
+    stop: pickOf('t-stop'),
+    go: pickOf('t-go'),
     note: App.$('t-note').value.trim()
   });
   App.saveSession(sess);

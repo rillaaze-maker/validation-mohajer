@@ -20,15 +20,22 @@
   .quote{border-inline-start:3px solid var(--line);padding:2px 12px;margin:8px 0;
     font-size:12.5px;line-height:1.75;color:var(--ink-2)}
   .quote b{color:var(--ink)}
+  .verdictbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:22px;box-shadow:var(--sh);margin-bottom:12px}
+  .verdictbox .big{font-size:21px;font-weight:700;letter-spacing:-.025em;line-height:1.35}
+  .lbars{display:flex;flex-direction:column;gap:9px;margin-top:16px}
+  .lbar{display:flex;align-items:center;gap:11px;font-size:12.5px}
+  .lbar .nm{width:88px;flex:none;font-weight:500}
+  .lbar .tr{flex:1;height:9px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+  .lbar .tr i{display:block;height:100%;border-radius:99px;transition:width .6s var(--spring)}
+  .lbar .vv{width:64px;flex:none;text-align:end;color:var(--ink-2)}
+  .gochips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 </style>
 </head>
 <body>
 <main class="wrap" style="padding-top:30px">
   <h1 style="font-size:26px">نتایج</h1>
-  <p class="lead" style="margin-top:8px">
-    خروجی مطلوب یک راند تست، فهرست فیدبک نیست — <b>تابلوی شواهد</b> است:
-    برای هر فرضیه چه چیزی موافق و چه چیزی مخالف دیدیم.
-  </p>
+  <p class="lead" style="margin-top:8px">گلوگاه کجاست: ارزش، کاربردپذیری، اعتماد یا انگیزه.</p>
 
   <div class="sec">وارد کردن جلسه‌ها</div>
   <div class="drop" id="drop">
@@ -100,7 +107,10 @@ function block(studyId, sessions){
     : `<div class="note ok"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
         <p><b>${App.fa(n)} جلسهٔ واجد شرایط.</b> «اکثریت» یعنی ${n <= 3 ? '۲ از ۳' : '۳ از ' + App.fa(n)}.</p></div>`;
 
+  const L = App.layerTally(complete);
+  const G = App.goTally(complete);
   return `<div class="sec">${App.esc(name)}</div>
+    ${verdict(L, G, n)}
     ${gate}
     <div class="grid c3" style="margin-top:12px">
       ${[['جلسهٔ کامل', n], ['رد در غربالگری', rejected.length],
@@ -123,8 +133,11 @@ function block(studyId, sessions){
           ? '<span class="badge b-bad">رد شد</span>'
           : s.endedAt ? '<span class="badge b-ok">کامل</span>' : '<span class="badge b-mute">ناتمام</span>'}</td>
         <td class="num">${s.screener?.score != null ? App.fa(s.screener.score) : '—'}</td>
-        <td>${(s.tasks || []).map(t => `<span class="badge ${OUT_CLS[t.outcome] || 'b-mute'}"
-              title="${App.esc(t.title)}">${OUTCOME[t.outcome] || '—'}</span>`).join(' ') || '—'}</td>
+        <td>${(s.tasks || []).map(t => {
+          const lay = t.stop && t.stop !== 'none' ? App.LAYERS[t.stop] : null;
+          return `<span class="badge ${OUT_CLS[t.outcome] || 'b-mute'}"
+            title="${App.esc(t.title)}${lay ? ' — ' + lay.label : ''}">${OUTCOME[t.outcome] || '—'}${
+            lay ? ' · ' + lay.label : ''}</span>`; }).join(' ') || '—'}</td>
         <td class="num">${s.durationMs ? App.mmss(s.durationMs)
           : (s.endedAt ? App.mmss(new Date(s.endedAt) - new Date(s.startedAt)) : '—')}</td>
         <td class="tiny">${App.dateFa(s.startedAt)}</td>
@@ -138,6 +151,41 @@ function block(studyId, sessions){
       <button class="btn btn-line btn-sm" onclick="json('${studyId}')">خروجی JSON کامل</button>
       <button class="btn btn-line btn-sm" onclick="print()">چاپ / PDF</button>
     </div>`;
+}
+
+/* The headline. One sentence naming the layer that stopped people most,
+   and what kind of fix that implies — because "trust" and "usability" send
+   you to completely different work. Silent below three sessions. */
+function verdict(L, G, n){
+  if (n < 3 || !L.stops) {
+    return `<div class="verdictbox">
+      <div class="big">هنوز حکمی نداریم</div>
+      <p class="lead" style="font-size:13px;margin-top:6px">
+        ${n < 3 ? 'زیر سه جلسهٔ واجد شرایط، الگو قابل خواندن نیست.'
+                : 'کسی جایی مکث نکرد — یا تسک‌ها خیلی راحت‌اند.'}</p></div>`;
+  }
+  const top = L.top, meta = App.LAYERS[top.k];
+  const clean = Math.round(L.t.clean / L.total * 100);
+  const yes = G.yes + G.maybe + G.no ? Math.round(G.yes / (G.yes + G.maybe + G.no) * 100) : 0;
+  return `<div class="verdictbox">
+    <div class="tiny">بیشترین دلیل توقف</div>
+    <div class="big" style="color:${meta.color};margin-top:3px">${meta.label}</div>
+    <p class="lead" style="font-size:13px;margin-top:7px">
+      <b class="num">${App.fa(top.pct)}٪</b> از مکث‌ها از این لایه بود.
+      یعنی کار بعدی روی <b>${meta.fix}</b> است، نه بقیه.</p>
+    <div class="lbars">
+      ${L.ranked.map(r => `<div class="lbar">
+        <span class="nm">${App.LAYERS[r.k].label}</span>
+        <span class="tr"><i style="width:${r.pct}%;background:${App.LAYERS[r.k].color}"></i></span>
+        <span class="vv num">${App.fa(r.n)} مورد</span>
+      </div>`).join('')}
+    </div>
+    <div class="gochips">
+      <span class="badge b-mute">بدون مکث <b class="num">${App.fa(clean)}٪</b></span>
+      <span class="badge ${yes >= 50 ? 'b-ok' : 'b-warn'}">«ادامه می‌دادم» <b class="num">${App.fa(yes)}٪</b></span>
+      <span class="badge b-mute">بله ${App.fa(G.yes)} · شاید ${App.fa(G.maybe)} · نه ${App.fa(G.no)}</span>
+    </div>
+  </div>`;
 }
 
 function avgDur(list){
@@ -250,6 +298,9 @@ window.csv = (studyId) => {
     (s.tasks || []).forEach(t => {
       r['task_' + t.id + '_outcome'] = t.outcome || '';
       r['task_' + t.id + '_sec'] = t.ms ? Math.round(t.ms / 1000) : '';
+      r['task_' + t.id + '_stop'] = t.stop || '';
+      r['task_' + t.id + '_layer'] = t.stop && t.stop !== 'none' ? App.LAYERS[t.stop].label : '';
+      r['task_' + t.id + '_go'] = t.go || '';
       r['task_' + t.id + '_note'] = t.note || '';
     });
     Object.entries(s.answers || {}).forEach(([k, v]) => {
