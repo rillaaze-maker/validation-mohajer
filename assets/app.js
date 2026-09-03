@@ -271,6 +271,38 @@
     return g;
   }
 
+  /* ── self-contained links ───────────────────────────────────────
+     A study made in the builder lives only in the localStorage of the
+     browser that made it. A link carrying just its id therefore works for
+     its author and nobody else — which is worthless, since sharing is the
+     entire point. So the link carries the whole study, base64url-encoded.
+     It opens on any machine, in incognito, with no upload and no account.
+
+     Bundled studies in /studies keep using ?id= — they are fetchable by
+     anyone already. */
+  function packStudy(study){
+    const c = { ...study }; delete c._source;
+    const bytes = new TextEncoder().encode(JSON.stringify(c));
+    let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function unpackStudy(packed){
+    try {
+      let b = packed.replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      const bin = atob(b);
+      return JSON.parse(new TextDecoder().decode(
+        Uint8Array.from(bin, ch => ch.charCodeAt(0))));
+    } catch (e) { return null; }
+  }
+  /* Bundled studies stay on the short link; everything else embeds itself. */
+  function shareLink(study, page){
+    const base = location.href.replace(/\/[^\/]*$/, '/') + (page || 'run.html');
+    return study._source === 'bundled'
+      ? base + '?id=' + encodeURIComponent(study.id)
+      : base + '?s=' + packStudy(study);
+  }
+
   const qs = (k) => new URLSearchParams(location.search).get(k);
 
   global.App = {
@@ -278,6 +310,7 @@
     loadRegistry, loadStudy, saveStudy, blankStudy,
     newSession, saveSession, allSessions, newCode,
     download, copy, postWebhook, toCSV, mountChrome, initTheme,
-    LAYERS, STOP_Q, GO_Q, layerTally, goTally
+    LAYERS, STOP_Q, GO_Q, layerTally, goTally,
+    packStudy, unpackStudy, shareLink
   };
 })(window);
