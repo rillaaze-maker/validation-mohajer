@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>راهنما · سنجه</title>
+<link rel="stylesheet" href="./assets/app.css">
+<style>
+  .try{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px}
+  .swap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  @media(max-width:700px){.swap{grid-template-columns:1fr}}
+  .swap div{padding:13px 15px;border-radius:var(--r-md);font-size:12.5px;line-height:1.7}
+  .swap .bad{background:var(--bad-soft)} .swap .good{background:var(--ok-soft)}
+  .swap b{display:block;margin-bottom:5px;font-size:11px;letter-spacing:.06em}
+  .swap .bad b{color:var(--bad)} .swap .good b{color:var(--ok)}
+</style>
+</head>
+<body>
+<main class="wrap narrow" style="padding-top:32px">
+  <h1 style="font-size:26px">راهنمای اجرا</h1>
+  <p class="lead" style="margin-top:8px">
+    این پلتفرم جای پروتکل تست را نمی‌گیرد؛ فقط اجرایش را ساده می‌کند.
+    سه قاعده‌ای که همه‌چیز به آن‌ها برمی‌گردد:
+  </p>
+
+  <div class="sec">قاعدهٔ اول · ترتیب</div>
+  <div class="card">
+    <h2 style="font-size:17px">ارزش ← اعتماد ← اقدام</h2>
+    <p class="lead" style="font-size:13.5px;margin-top:8px">
+      اگر کاربر نفهمیده این چیست و به چه دردش می‌خورد، واکنشش دربارهٔ اعتماد <b>قابل تفسیر نیست</b>،
+      و تمایلش به اقدام هم نیست. هر وقت مرحلهٔ قبل شکست خورد، نتیجهٔ مرحلهٔ بعد را معتبر فرض نکنید.
+    </p>
+  </div>
+
+  <div class="sec">قاعدهٔ دوم · شواهد</div>
+  <div class="card">
+    <p style="font-size:13.5px;line-height:1.8">
+      <b>رفتار</b> قوی‌ترین شاهد است: چه کرد، کجا مکث کرد، چه چیزی را خودش باز کرد، کجا رها کرد.<br>
+      <b>علت</b> دومی است: چرا این کار را کرد.<br>
+      <b>نظر و امتیاز</b> ضعیف‌ترین است و بدون رفتار، تقریباً بی‌ارزش.
+    </p>
+    <div class="note ok" style="margin-top:12px">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+      <p><b>شاهد قوی = رفتار + علت + تعهد.</b> مثلاً: خودش مسیر خروج را باز کرد →
+        گفت می‌خواست مطمئن شود پول گیر نمی‌کند → بعد گفت با چه مبلغی حاضر است شروع کند.</p>
+    </div>
+    <p class="tiny" style="margin-top:10px">
+      برای همین در کنسول جلسه، هر یادداشت باید برچسب بخورد. یادداشت بی‌برچسب بعداً
+      قابل وزن‌دادن نیست و همه‌چیز به «خوشش آمد» تبدیل می‌شود.</p>
+  </div>
+
+  <div class="sec">قاعدهٔ سوم · Mom Test</div>
+  <div class="card">
+    <p style="font-size:13.5px;line-height:1.8">
+      رفتار گذشته داده است؛ نیت آینده داستان. سؤالی که از آدم بخواهد خودش را پیش‌بینی کند
+      یا به ایدهٔ شما نمره بدهد، تعارف برمی‌گرداند نه شاهد.
+    </p>
+    <div class="swap">
+      <div class="bad"><b>به‌جای این</b>«اگر چنین چیزی بود، استفاده می‌کردی؟»</div>
+      <div class="good"><b>این را بپرسید</b>«آخرین بار که این لازمت شد، چه کار کردی؟»</div>
+      <div class="bad"><b>به‌جای این</b>«نظرت دربارهٔ این ایده چیست؟»</div>
+      <div class="good"><b>این را بپرسید</b>«این کار الان چقدر برایت وقت یا پول می‌برد؟»</div>
+      <div class="bad"><b>به‌جای این</b>«این‌طوری راحت‌تر نیست؟»</div>
+      <div class="good"><b>این را بپرسید</b>«دفعهٔ قبل کجا متوقف شدی و چرا؟»</div>
+    </div>
+    <p class="tiny" style="margin-top:12px">
+      در «ساخت مطالعه» هر سؤالی که بنویسید همان لحظه بررسی می‌شود و اگر یکی از این الگوها را داشته باشد،
+      دلیلش و یک بازنویسی پیشنهاد می‌شود.</p>
+  </div>
+
+  <div class="sec">امتحان کنید</div>
+  <div class="try">
+    <div class="field"><label>یک سؤال بنویسید تا بررسی شود</label>
+      <input class="input" id="q" placeholder="مثلاً: اگر این سرویس بود، استفاده می‌کردی؟"></div>
+    <div id="out"></div>
+    <p class="tiny" style="margin-top:12px">شروع‌کننده‌های آماده — این‌ها با ساختار خودشان از فیلتر رد می‌شوند:</p>
+    <div class="chipset" id="starters" style="margin-top:6px"></div>
+  </div>
+
+  <div class="sec">غربالگری — چطور سگمنت را واقعاً پیدا کنیم</div>
+  <div class="card">
+    <p style="font-size:13.5px;line-height:1.8">
+      سگمنت را با <b>کاری که طرف کرده</b> تعریف کنید، نه با چیزی که هست یا می‌گوید دوست دارد.
+      «آخرین بار کِی این کار را کردید؟» آدم را جدا می‌کند؛ «آیا به این موضوع علاقه دارید؟» نه.
+    </p>
+    <p style="font-size:13.5px;line-height:1.8;margin-top:10px">
+      هر گزینه دو اهرم دارد: <b>امتیاز</b> برای شدت تطابق، و <b>حذف‌کننده</b> برای شرط قطعی.
+      نسبت داشتن با تیم را همیشه حذف‌کننده بگذارید — نزدیکان شما مؤدب‌ترین و بی‌فایده‌ترین
+      شرکت‌کننده‌ها هستند.
+    </p>
+    <div class="note warn" style="margin-top:12px">
+      <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+      <p>رد شدن در غربالگری هم داده است. اگر بیشتر آدم‌ها رد می‌شوند، یا کانال جذبتان اشتباه است
+        یا تعریف سگمنتتان از واقعیت دور است — هر دو را «نتایج» نشان می‌دهد.</p>
+    </div>
+  </div>
+
+  <div class="sec">چند نفر کافی است؟</div>
+  <div class="card">
+    <p style="font-size:13.5px;line-height:1.8">
+      برای تصمیم «ادامه / اصلاح / محدود کردن / توقف»، سه تا پنج جلسه.
+      «اکثریت» یعنی ۲ از ۳، یا ۳ از ۴ تا ۵. زیر سه جلسه هیچ الگویی نبینید —
+      «نتایج» تا آن موقع هشدار می‌دهد و حکم نمی‌دهد.
+    </p>
+  </div>
+
+  <footer class="site">این راهنما خلاصهٔ پروتکل تیم است، نه جایگزین آن.</footer>
+</main>
+
+<script src="./assets/app.js"></script>
+<script src="./assets/momtest.js"></script>
+<script>
+App.mountChrome('guide.html');
+
+const q = App.$('q'), out = App.$('out');
+function run(){
+  const v = q.value.trim();
+  if (!v) { out.innerHTML = ''; return; }
+  const r = MomTest.lint(v);
+  const c = r.score >= 75 ? 'var(--ok)' : r.score >= 45 ? 'var(--warn)' : 'var(--bad)';
+  out.innerHTML = `<div class="lint">
+    <div class="score" style="color:${c}">
+      <span class="meter"><i style="width:${r.score}%;background:${c}"></i></span>
+      ${App.fa(r.score)}٪ ${r.ok ? 'قابل‌استفاده' : 'نیاز به بازنویسی'}</div>
+    ${r.flags.map(f => `<div class="flag ${f.level}">
+      <span>${f.level === 'good' ? '✓' : f.level === 'err' ? '✕' : '!'}</span>
+      <span class="m"><span class="why">${App.esc(f.label)} — ${App.esc(f.why)}</span>
+        ${f.fix ? `<span class="fix">${App.esc(f.fix)}${f.example && f.example !== '—'
+          ? ` <i>${App.esc(f.example)}</i>` : ''}</span>` : ''}</span></div>`).join('')}
+    ${!r.flags.length ? '<p class="tiny">الگوی مشکل‌داری پیدا نشد. اگر به رفتار گذشته وصلش کنید بهتر هم می‌شود.</p>' : ''}
+  </div>`;
+}
+q.addEventListener('input', run);
+q.value = 'اگر چنین سرویسی بود، استفاده می‌کردی؟'; run();
+
+App.$('starters').innerHTML = MomTest.STARTERS
+  .map(s => `<button class="chip">${App.esc(s)}</button>`).join('');
+App.$$('#starters .chip').forEach(b => b.onclick = () => { q.value = b.textContent; run(); q.focus(); });
+</script>
+</body>
+</html>

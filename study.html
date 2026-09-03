@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مطالعه · سنجه</title>
+<link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+<main class="wrap" style="padding-top:30px" id="main"></main>
+<script src="./assets/app.js"></script>
+<script>
+App.mountChrome('index.html');
+const RISK = { 'very-high':'خیلی بالا','high':'بالا','medium-high':'متوسط تا بالا','medium':'متوسط' };
+
+(async function () {
+  const id = App.qs('id');
+  const s  = id ? await App.loadStudy(id) : null;
+  const m  = App.$('main');
+  if (!s) {
+    m.innerHTML = `<div class="empty"><h3>این مطالعه پیدا نشد</h3>
+      <a class="btn btn-line" href="index.html" style="margin-top:12px">بازگشت به فهرست</a></div>`;
+    return;
+  }
+
+  const base = location.href.replace(/\/[^\/]*$/, '/');
+  const runLink = base + 'run.html?id=' + encodeURIComponent(s.id);
+  const sessions = App.allSessions().filter(x => x.studyId === s.id);
+  const done = sessions.filter(x => x.endedAt);
+  const qualified = sessions.filter(x => x.screener?.qualified === true).length;
+  const rejected  = sessions.filter(x => x.screener?.qualified === false).length;
+
+  m.innerHTML = `
+    <a href="index.html" class="tiny" style="text-decoration:none">← همهٔ مطالعه‌ها</a>
+    <div style="display:flex;align-items:center;gap:13px;margin:12px 0 6px">
+      <div class="study" style="all:unset;font-size:26px">${App.esc(s.icon||'◆')}</div>
+      <h1 style="font-size:26px">${App.esc(s.name)}</h1>
+    </div>
+    <p class="lead">${App.esc(s.product||'')}</p>
+
+    <div class="sec">اجرای جلسه</div>
+    <div class="grid c2">
+      <div class="card">
+        <h3>لینک شرکت‌کننده</h3>
+        <p class="tiny" style="margin:6px 0 10px">این را برای شرکت‌کننده بفرستید. اول غربال می‌شود، بعد وارد جلسه.</p>
+        <input class="input num" id="lnk" readonly value="${App.esc(runLink)}" style="font-size:12px">
+        <div class="row-btns" style="margin-top:9px">
+          <button class="btn btn-primary btn-sm" onclick="cp()">کپی لینک</button>
+          <a class="btn btn-line btn-sm" href="${App.esc(runLink)}" target="_blank">باز کردن</a>
+          <a class="btn btn-line btn-sm" href="${App.esc(runLink)}&skip=1" target="_blank">بدون غربالگری</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>کنسول تسهیل‌گر</h3>
+        <p class="tiny" style="margin:6px 0 10px">برای جلسهٔ حضوری یا آنلاین: اسکریپت، زمان‌سنج و ثبت شواهد در حین جلسه.</p>
+        <a class="btn btn-brand btn-sm" href="console.html?id=${encodeURIComponent(s.id)}">شروع جلسهٔ با تسهیل‌گر</a>
+      </div>
+    </div>
+
+    <div class="sec">وضعیت</div>
+    <div class="grid c3">
+      ${[['جلسه‌های ثبت‌شده', sessions.length],['جلسهٔ کامل', done.length],
+         ['واجد شرایط', qualified],['رد شده در غربالگری', rejected]]
+        .map(([k,v]) => `<div class="card"><div class="tiny">${k}</div>
+          <div class="num" style="font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:4px">${App.fa(v)}</div>
+        </div>`).join('')}
+    </div>
+    ${done.length && done.length < 3 ? `<div class="note warn" style="margin-top:12px">
+      <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+      <p>هنوز ${App.fa(done.length)} جلسهٔ کامل دارید. قاعدهٔ تصمیم از <b>سه تا پنج جلسه</b> شروع می‌شود —
+        تا آن موقع الگو نبینید.</p></div>` : ''}
+
+    <div class="sec">فرضیه‌ها</div>
+    <div class="card flat">
+      ${(s.hypotheses||[]).map(h => `<div class="kv">
+        <span class="k"><b class="en">${App.esc(h.id)}</b> — ${App.esc(h.text)}</span>
+        <span class="v"><span class="badge ${h.risk==='very-high'?'b-bad':h.risk==='high'?'b-warn':'b-mute'}">${RISK[h.risk]||h.risk||''}</span></span>
+      </div>`).join('') || '<p class="tiny">فرضیه‌ای ثبت نشده.</p>'}
+    </div>
+
+    <div class="sec">غربالگری — ${App.fa(s.screener?.questions?.length||0)} سؤال</div>
+    <div class="card flat">
+      <p class="tiny" style="margin-bottom:10px">حد قبولی: امتیاز <b class="num">${App.fa(s.screener?.passScore ?? 0)}</b>
+        به بالا، و هیچ گزینهٔ حذفی انتخاب نشده باشد.</p>
+      ${(s.screener?.questions||[]).map((q,i) => `<div class="kv">
+        <span class="k">${App.fa(i+1)}. ${App.esc(q.text)}</span>
+        <span class="v tiny">${q.options?.some(o=>o.disqualify)?'<span class="badge b-bad">دارای گزینهٔ حذفی</span>':''}</span>
+      </div>`).join('') || '<p class="tiny">سؤالی ثبت نشده.</p>'}
+    </div>
+
+    <div class="sec">تسک‌ها</div>
+    <div class="card flat">
+      ${(s.tasks||[]).map((t,i) => `<div class="kv">
+        <span class="k"><b>${App.fa(i+1)}. ${App.esc(t.title)}</b><br><span class="tiny">${App.esc(t.prompt)}</span></span>
+        <span class="v"><span class="badge b-brand en">${App.esc(t.hypothesis||'—')}</span></span>
+      </div>`).join('') || '<p class="tiny">تسکی ثبت نشده.</p>'}
+    </div>
+
+    <div class="row-btns" style="margin-top:24px">
+      <a class="btn btn-line" href="builder.html?id=${encodeURIComponent(s.id)}">ویرایش مطالعه</a>
+      <a class="btn btn-line" href="results.html?id=${encodeURIComponent(s.id)}">دیدن نتایج</a>
+      <button class="btn btn-line" onclick="exp()">خروجی JSON مطالعه</button>
+    </div>
+    <footer class="site">شناسهٔ مطالعه: <b class="en">${App.esc(s.id)}</b></footer>`;
+
+  window.cp = async () => {
+    const ok = await App.copy(runLink);
+    const b = event.target; const t = b.textContent;
+    b.textContent = ok ? 'کپی شد ✓' : 'کپی نشد';
+    setTimeout(() => b.textContent = t, 1600);
+  };
+  window.exp = () => App.download(s.id + '.study.json', JSON.stringify(s, null, 2));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>نتایج · سنجه</title>
+<link rel="stylesheet" href="./assets/app.css">
+<style>
+  .hyp{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:18px;margin-bottom:11px}
+  .hyp .hd{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+  .hyp .hd .id{font-weight:700;font-size:12px;padding:4px 9px;border-radius:7px;
+    background:var(--surface-2);flex:none}
+  .bars{display:flex;height:7px;border-radius:99px;overflow:hidden;background:var(--surface-2);gap:2px}
+  .bars i{display:block;height:100%;border-radius:99px}
+  .verdict{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
+  .drop{border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:26px;text-align:center;
+    transition:.2s var(--swift);background:var(--surface)}
+  .drop.over{border-color:var(--brand);background:var(--brand-soft)}
+  .quote{border-inline-start:3px solid var(--line);padding:2px 12px;margin:8px 0;
+    font-size:12.5px;line-height:1.75;color:var(--ink-2)}
+  .quote b{color:var(--ink)}
+</style>
+</head>
+<body>
+<main class="wrap" style="padding-top:30px">
+  <h1 style="font-size:26px">نتایج</h1>
+  <p class="lead" style="margin-top:8px">
+    خروجی مطلوب یک راند تست، فهرست فیدبک نیست — <b>تابلوی شواهد</b> است:
+    برای هر فرضیه چه چیزی موافق و چه چیزی مخالف دیدیم.
+  </p>
+
+  <div class="sec">وارد کردن جلسه‌ها</div>
+  <div class="drop" id="drop">
+    <p style="font-size:13px;font-weight:500">فایل‌های جلسه را اینجا رها کنید</p>
+    <p class="tiny" style="margin:6px 0 12px">یا متن کپی‌شدهٔ جلسه را جای‌گذاری کنید</p>
+    <div class="row-btns" style="justify-content:center">
+      <label class="btn btn-primary btn-sm" style="cursor:pointer">انتخاب فایل
+        <input type="file" accept="application/json" multiple hidden onchange="pickFiles(event)"></label>
+      <button class="btn btn-line btn-sm" onclick="pasteBox()">جای‌گذاری متن</button>
+    </div>
+    <textarea class="input" id="paste" rows="3" hidden style="margin-top:10px"
+      placeholder="متن JSON جلسه را اینجا بگذارید و از فوکوس خارج شوید"></textarea>
+  </div>
+  <p id="msg" class="tiny" style="margin-top:8px"></p>
+
+  <div id="body"></div>
+  <footer class="site">جلسه‌های همین مرورگر خودکار خوانده می‌شوند؛ بقیه را وارد کنید.</footer>
+</main>
+
+<script src="./assets/app.js"></script>
+<script>
+App.mountChrome('results.html');
+
+/* Sessions from this browser plus any imported ones, de-duplicated by
+   study+code so importing the same file twice cannot inflate a count. */
+let imported = [];
+let studies = [];
+
+const OUTCOME = { done:'انجام شد', partial:'تا حدی', stuck:'گیر کرد', wouldnt:'ادامه نمی‌داد' };
+const OUT_CLS = { done:'b-ok', partial:'b-warn', stuck:'b-bad', wouldnt:'b-bad' };
+
+function pool(){
+  const seen = new Map();
+  [...App.allSessions(), ...imported].forEach(s => {
+    if (s && s.studyId && s.code) seen.set(s.studyId + '|' + s.code, s);
+  });
+  return [...seen.values()];
+}
+
+(async function(){ studies = await App.loadRegistry(); paint(); })();
+
+function paint(){
+  const all = pool();
+  const filterId = App.qs('id');
+  const host = App.$('body');
+  if (!all.length) {
+    host.innerHTML = `<div class="empty" style="margin-top:20px"><h3>هنوز جلسه‌ای نیست</h3>
+      <p class="tiny">وقتی جلسه‌ای کامل شد یا فایلی وارد کردید، جمع‌بندی اینجا ساخته می‌شود.</p></div>`;
+    return;
+  }
+  const ids = [...new Set(all.map(s => s.studyId))];
+  host.innerHTML = ids.filter(id => !filterId || id === filterId)
+    .map(id => block(id, all.filter(s => s.studyId === id))).join('');
+}
+
+function block(studyId, sessions){
+  const st = studies.find(s => s.id === studyId);
+  const name = st ? st.name : studyId;
+  const complete = sessions.filter(s => s.endedAt && s.screener?.qualified !== false);
+  const rejected = sessions.filter(s => s.screener?.qualified === false);
+
+  /* The protocol's own decision rule: nothing is readable below three
+     qualified sessions, and "majority" means 2 of 3 or 3 of 4–5. */
+  const n = complete.length;
+  const gate = n < 3
+    ? `<div class="note warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <p><b>${App.fa(n)} جلسهٔ واجد شرایط.</b> قاعدهٔ تصمیم از سه جلسه شروع می‌شود —
+          تا آن موقع این اعداد را الگو حساب نکنید.</p></div>`
+    : `<div class="note ok"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+        <p><b>${App.fa(n)} جلسهٔ واجد شرایط.</b> «اکثریت» یعنی ${n <= 3 ? '۲ از ۳' : '۳ از ' + App.fa(n)}.</p></div>`;
+
+  return `<div class="sec">${App.esc(name)}</div>
+    ${gate}
+    <div class="grid c3" style="margin-top:12px">
+      ${[['جلسهٔ کامل', n], ['رد در غربالگری', rejected.length],
+         ['میانگین مدت', avgDur(complete)]].map(([k, v]) =>
+        `<div class="card"><div class="tiny">${k}</div>
+          <div class="num" style="font-size:23px;font-weight:700;margin-top:3px">${
+            typeof v === 'number' ? App.fa(v) : v}</div></div>`).join('')}
+    </div>
+
+    <div class="sec">تابلوی شواهد</div>
+    ${st && st.hypotheses ? st.hypotheses.map(h => hypCard(h, st, complete)).join('')
+      : '<p class="tiny">این مطالعه در همین مرورگر تعریف نشده، پس نگاشت فرضیه‌ها در دسترس نیست.</p>'}
+
+    <div class="sec">شرکت‌کننده‌ها</div>
+    <div class="card flat tblwrap"><table class="tbl">
+      <thead><tr><th>کد</th><th>وضعیت</th><th>امتیاز غربالگری</th><th>تسک‌ها</th><th>مدت</th><th>تاریخ</th></tr></thead>
+      <tbody>${sessions.map(s => `<tr>
+        <td class="en">${App.esc(s.code)}</td>
+        <td>${s.screener?.qualified === false
+          ? '<span class="badge b-bad">رد شد</span>'
+          : s.endedAt ? '<span class="badge b-ok">کامل</span>' : '<span class="badge b-mute">ناتمام</span>'}</td>
+        <td class="num">${s.screener?.score != null ? App.fa(s.screener.score) : '—'}</td>
+        <td>${(s.tasks || []).map(t => `<span class="badge ${OUT_CLS[t.outcome] || 'b-mute'}"
+              title="${App.esc(t.title)}">${OUTCOME[t.outcome] || '—'}</span>`).join(' ') || '—'}</td>
+        <td class="num">${s.durationMs ? App.mmss(s.durationMs)
+          : (s.endedAt ? App.mmss(new Date(s.endedAt) - new Date(s.startedAt)) : '—')}</td>
+        <td class="tiny">${App.dateFa(s.startedAt)}</td>
+      </tr>`).join('')}</tbody></table></div>
+
+    <div class="sec">نقل‌قول‌ها و شواهد ثبت‌شده</div>
+    <div class="card flat">${quotes(sessions) || '<p class="tiny">یادداشتی ثبت نشده.</p>'}</div>
+
+    <div class="row-btns" style="margin-top:18px">
+      <button class="btn btn-primary btn-sm" onclick="csv('${studyId}')">خروجی CSV</button>
+      <button class="btn btn-line btn-sm" onclick="json('${studyId}')">خروجی JSON کامل</button>
+      <button class="btn btn-line btn-sm" onclick="print()">چاپ / PDF</button>
+    </div>`;
+}
+
+function avgDur(list){
+  const ds = list.map(s => s.durationMs || (s.endedAt ? new Date(s.endedAt) - new Date(s.startedAt) : 0))
+    .filter(Boolean);
+  return ds.length ? App.mmss(ds.reduce((a, b) => a + b, 0) / ds.length) : '—';
+}
+
+/* A hypothesis is scored from the tasks mapped to it: a completed task is
+   evidence for, a stuck or "wouldn't continue" outcome is evidence against.
+   Partial counts as neither — it is exactly the ambiguity a human has to read. */
+function hypCard(h, st, sessions){
+  const taskIds = (st.tasks || []).filter(t => t.hypothesis === h.id).map(t => t.id);
+  let fo = 0, ag = 0, mid = 0;
+  sessions.forEach(s => (s.tasks || []).forEach(t => {
+    if (!taskIds.includes(t.id)) return;
+    if (t.outcome === 'done') fo++;
+    else if (t.outcome === 'stuck' || t.outcome === 'wouldnt') ag++;
+    else if (t.outcome === 'partial') mid++;
+  }));
+  const total = fo + ag + mid;
+  const pct = (v) => total ? (v / total) * 100 : 0;
+  let verdict = 'شواهد ناکافی', cls = 'b-mute';
+  if (total >= 3) {
+    if (fo > ag * 2)        { verdict = 'ادامه';        cls = 'b-ok'; }
+    else if (ag > fo * 2)   { verdict = 'توقف / بازنگری'; cls = 'b-bad'; }
+    else                    { verdict = 'اصلاح';         cls = 'b-warn'; }
+  }
+  return `<div class="hyp">
+    <div class="hd">
+      <span class="id en">${App.esc(h.id)}</span>
+      <span style="flex:1;font-size:13.5px;line-height:1.6">${App.esc(h.text)}</span>
+      <span class="verdict ${cls}" style="background:var(--surface-2)">${verdict}</span>
+    </div>
+    <div class="bars">
+      <i style="width:${pct(fo)}%;background:var(--ok)"></i>
+      <i style="width:${pct(mid)}%;background:var(--warn)"></i>
+      <i style="width:${pct(ag)}%;background:var(--bad)"></i>
+    </div>
+    <p class="tiny" style="margin-top:7px">
+      موافق <b class="num">${App.fa(fo)}</b> ·
+      مبهم <b class="num">${App.fa(mid)}</b> ·
+      مخالف <b class="num">${App.fa(ag)}</b>
+      ${taskIds.length ? '' : ' — هیچ تسکی به این فرضیه وصل نشده'}</p>
+  </div>`;
+}
+
+function quotes(sessions){
+  const rows = [];
+  sessions.forEach(s => {
+    (s.notes || []).filter(n => n.tag === 'quote' || n.tag === 'blocker' || n.tag === 'commitment')
+      .forEach(n => rows.push(`<div class="quote"><b class="en">${App.esc(s.code)}</b>
+        <span class="badge b-mute">${n.tag === 'quote' ? 'نقل‌قول' : n.tag === 'blocker' ? 'مانع' : 'تعهد'}</span>
+        <br>${App.esc(n.text)}</div>`));
+    (s.tasks || []).filter(t => t.note).forEach(t =>
+      rows.push(`<div class="quote"><b class="en">${App.esc(s.code)}</b>
+        <span class="badge b-mute">${App.esc(t.title)}</span><br>${App.esc(t.note)}</div>`));
+    Object.entries(s.answers || {}).forEach(([k, v]) => {
+      if (typeof v === 'string' && v.length > 12)
+        rows.push(`<div class="quote"><b class="en">${App.esc(s.code)}</b>
+          <span class="badge b-mute">${App.esc(k)}</span><br>${App.esc(v)}</div>`);
+    });
+  });
+  return rows.join('');
+}
+
+/* ── import ─────────────────────────────────────────────────────── */
+function absorb(text, label){
+  try {
+    const j = JSON.parse(text);
+    const list = Array.isArray(j) ? j : [j];
+    let n = 0;
+    list.forEach(s => { if (s && s.studyId && s.code) { imported.push(s); App.saveSession(s); n++; } });
+    App.$('msg').textContent = n ? App.fa(n) + ' جلسه وارد شد ✓' : 'در ' + label + ' جلسه‌ای پیدا نشد.';
+    paint();
+  } catch (e) { App.$('msg').textContent = label + ' خوانده نشد: ' + e.message; }
+}
+window.pickFiles = (e) => {
+  [...e.target.files].forEach(f => {
+    const r = new FileReader();
+    r.onload = () => absorb(r.result, f.name);
+    r.readAsText(f);
+  });
+};
+window.pasteBox = () => {
+  const t = App.$('paste'); t.hidden = !t.hidden;
+  if (!t.hidden) { t.focus(); t.onblur = () => { if (t.value.trim()) { absorb(t.value, 'متن'); t.value = ''; } }; }
+};
+const drop = App.$('drop');
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => {
+  [...e.dataTransfer.files].forEach(f => {
+    const r = new FileReader(); r.onload = () => absorb(r.result, f.name); r.readAsText(f);
+  });
+});
+
+/* ── export ─────────────────────────────────────────────────────── */
+window.csv = (studyId) => {
+  const st = studies.find(s => s.id === studyId);
+  const rows = pool().filter(s => s.studyId === studyId).map(s => {
+    const r = {
+      code: s.code, mode: s.mode, started: s.startedAt, ended: s.endedAt || '',
+      qualified: s.screener?.qualified === false ? 'no' : (s.screener?.qualified ? 'yes' : 'skipped'),
+      screener_score: s.screener?.score ?? '',
+      reject_reason: (s.screener?.reasons || []).join(' | ')
+    };
+    (s.tasks || []).forEach(t => {
+      r['task_' + t.id + '_outcome'] = t.outcome || '';
+      r['task_' + t.id + '_sec'] = t.ms ? Math.round(t.ms / 1000) : '';
+      r['task_' + t.id + '_note'] = t.note || '';
+    });
+    Object.entries(s.answers || {}).forEach(([k, v]) => {
+      r['q_' + k] = Array.isArray(v) ? v.join('; ') : v;
+    });
+    (s.notes || []).forEach((n, i) => r['note_' + i + '_' + n.tag] = n.text);
+    return r;
+  });
+  App.download((st ? st.id : studyId) + '.results.csv', App.toCSV(rows), 'text/csv');
+};
+window.json = (studyId) =>
+  App.download(studyId + '.sessions.json',
+    JSON.stringify(pool().filter(s => s.studyId === studyId), null, 2));
+</script>
+</body>
+</html>

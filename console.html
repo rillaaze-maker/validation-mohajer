@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>کنسول جلسه · سنجه</title>
+<link rel="stylesheet" href="./assets/app.css">
+<style>
+  .lay{display:flex;gap:18px;align-items:flex-start;max-width:1240px;margin:0 auto;padding:20px 22px}
+  @media(max-width:1040px){.lay{flex-direction:column}}
+  .col-script{flex:1;min-width:0}
+  .col-notes{width:392px;flex:none;position:sticky;top:74px}
+  @media(max-width:1040px){.col-notes{width:100%;position:static}}
+  .timer{font-size:25px;font-weight:700;letter-spacing:-.02em}
+  .stepcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:15px;margin-bottom:9px;transition:.2s var(--swift)}
+  .stepcard[data-on=true]{border-color:var(--ink);box-shadow:var(--sh)}
+  .stepcard .hd{display:flex;align-items:center;gap:9px;cursor:pointer}
+  .stepcard .hd .n{width:23px;height:23px;border-radius:7px;background:var(--surface-2);
+    display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+  .stepcard[data-on=true] .hd .n{background:var(--ink);color:var(--canvas)}
+  .stepcard .hd .t{flex:1;font-size:13.5px;font-weight:600}
+  .stepcard .body{margin-top:10px;font-size:12.5px;line-height:1.75;color:var(--ink-2)}
+  .say{padding:10px 13px;border-radius:var(--r-sm);margin-top:8px;font-size:12.5px;line-height:1.7}
+  .say.do{background:var(--ok-soft);color:var(--ok)} .say.do b{color:inherit}
+  .say.dont{background:var(--bad-soft);color:var(--bad)}
+  .say .m{color:var(--ink)}
+  .noterow{display:flex;gap:8px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:12.5px}
+  .noterow:last-child{border-bottom:none}
+  .noterow .t{font-size:10.5px;color:var(--ink-3);flex:none;padding-top:2px}
+  .noterow .x{opacity:.4;background:none;border:none;font-size:14px;line-height:1}
+  .noterow:hover .x{opacity:1}
+  .tagpick{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<main id="main"></main>
+<script src="./assets/app.js"></script>
+<script src="./assets/momtest.js"></script>
+<script>
+App.mountChrome('console.html');
+
+/* ═══════════════════════════════════════════════════════════════════
+   FACILITATOR CONSOLE
+   The protocol's own session structure, on screen, with a timer and a
+   note field that forces every note to be typed as evidence.
+
+   Why the tag is mandatory: the protocol weights Behaviour above
+   Explanation above Opinion. If notes are untagged prose you cannot
+   apply that weighting afterwards — everything flattens into "they said
+   they liked it". Tagging at the moment of writing costs one keystroke
+   and is the difference between a transcript and an evidence board.
+   ═══════════════════════════════════════════════════════════════════ */
+const TAGS = [
+  { id:'behaviour',  label:'رفتار',  cls:'b-ok',    hint:'چه کرد؟ کجا مکث کرد؟ چه چیزی را خودش باز کرد؟' },
+  { id:'explanation',label:'علت',    cls:'b-brand', hint:'چرا این کار را کرد؟ چه نگرانی پشتش بود؟' },
+  { id:'commitment', label:'تعهد',   cls:'b-warn',  hint:'حاضر شد چه کاری بکند؟ چه مبلغی گفت؟' },
+  { id:'quote',      label:'نقل‌قول',cls:'b-mute',  hint:'جملهٔ دقیق، بدون بازنویسی.' },
+  { id:'blocker',    label:'مانع',   cls:'b-bad',   hint:'چه چیزی کاملاً متوقفش کرد؟' }
+];
+
+const STEPS = [
+  { t:'Business Baseline', m:'۳–۵ دقیقه · قبل از دیدن محصول',
+    body:'نیاز و رفتار واقعی را بدون Pitch بفهمید.',
+    asks:['آخرین بار کِی خواستید بخشی از پولتان را از ریال خارج کنید یا دلاری نگه دارید؟ چه کار کردید؟',
+          'آن بار چه چیزی باعث شد واقعاً اقدام کنید؟',
+          'چه چیزی در مسیر فعلی اذیتتان می‌کند ولی تحملش می‌کنید؟'],
+    rec:'Trigger، راه‌حل فعلی، درد، فوریت، جایگزین‌ها' },
+  { t:'Framing کنترل‌شده', m:'Category و Job را بگویید — نه راه‌حل و نه مزیت',
+    body:'یک‌بار، خنثی، بدون دفاع از محصول.',
+    asks:['با این توضیح، انتظار دارید چه کارهایی بتوانید با آن انجام دهید؟'],
+    rec:'انتظار اولیه از قابلیت‌ها' },
+  { t:'Explore / First Impression', m:'دیگر توضیح ندهید',
+    body:'بگذارید خودش بخواند و جلو برود.',
+    asks:['هر کاری که طبیعی است انجام دهید و بلند فکر کنید.'],
+    rec:'فهم Value، انتظار از فیچر، ابهام، مسیر طبیعی' },
+  { t:'Trust & Control', m:'Trust Mechanismها را نام نبرید',
+    body:'رفتار و سؤال‌های خودش را ببینید.',
+    asks:['الان قبل از ادامه چه چیزهایی ذهنتان را درگیر کرده؟',
+          'برای ادامه چه چیزی باید روشن شود؟'],
+    rec:'سؤال دربارهٔ Exit / Fee / Support / Partner / محل پول' },
+  { t:'Decision Point', m:'در Confirm، توقف یا Failure',
+    body:'Commitment را بدون فشار بسنجید.',
+    asks:['اگر این پول واقعی بود، همین‌جا چه کار می‌کردید؟',
+          'چه چیزی تصمیمتان را عوض می‌کند؟'],
+    rec:'ادامه/توقف، مبلغ تست، شرط ادامه، Deal-breaker' },
+  { t:'Business Debrief', m:'بعد از تجربه',
+    body:'ارزش و تمایل واقعی را دوباره بسنجید.',
+    asks:['این سرویس در چه موقعیتی واقعاً برایتان کاربرد دارد؟',
+          'برای جایگزین کردن مسیر فعلی چه چیزی کم دارد؟',
+          'اگر می‌خواستید معرفی‌اش کنید، به چه کسی و برای چه مسئله‌ای؟'],
+    rec:'Use case، switching condition، referral signal' }
+];
+
+const DO = ['Job کلی محصول را یک‌بار و خنثی توضیح بده.',
+  '«ما تجربه را تست می‌کنیم، نه تو را.»',
+  '«هر جا در واقعیت متوقف می‌شدی، اینجا هم متوقف شو.»',
+  '«چی باعث شد این کار را بکنی؟»'];
+const DONT = ['«داریم اعتماد را تست می‌کنیم.»',
+  '«مزیت ما این است که هر وقت خواستی خارج می‌شوی.»',
+  '«اول ۵ دلار Trial کن.»',
+  'Featureها را Pitch نکن یا از محصول دفاع نکن.'];
+
+let S = null, sess = null, t0 = null, tick = null, step = 0, tag = 'behaviour';
+
+(async function(){
+  const id = App.qs('id');
+  S = id ? await App.loadStudy(id) : null;
+  const m = App.$('main');
+  if (!S) { m.innerHTML = `<div class="wrap"><div class="empty"><h3>مطالعه پیدا نشد</h3>
+    <a class="btn btn-line" href="index.html" style="margin-top:12px">فهرست مطالعه‌ها</a></div></div>`; return; }
+  sess = App.newSession(S.id, 'moderated');
+  paint();
+})();
+
+function paint(){
+  App.$('main').innerHTML = `<div class="lay">
+    <div class="col-script">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div><div class="tiny">جلسه</div>
+          <h2 style="font-size:17px">${App.esc(S.name)}</h2></div>
+        <div style="flex:1"></div>
+        <div style="text-align:end"><div class="tiny">کد شرکت‌کننده</div>
+          <div class="en" style="font-weight:700;font-size:15px">${sess.code}</div></div>
+        <div style="text-align:end"><div class="tiny">مدت</div>
+          <div class="timer num" id="clk">۰۰:۰۰</div></div>
+        <button class="btn btn-primary btn-sm" id="run" onclick="toggleRun()">شروع</button>
+      </div>
+
+      <div class="grid c2" style="margin-bottom:14px">
+        <div class="say do"><b>بگو</b><div class="m" style="margin-top:5px">
+          ${DO.map(x => '· ' + App.esc(x)).join('<br>')}</div></div>
+        <div class="say dont"><b>نگو</b><div class="m" style="margin-top:5px">
+          ${DONT.map(x => '· ' + App.esc(x)).join('<br>')}</div></div>
+      </div>
+
+      <div class="sec">روال جلسه</div>
+      <div id="steps"></div>
+
+      <div class="sec">تسک‌های این مطالعه</div>
+      <div class="card flat">${(S.tasks || []).map((t, i) =>
+        `<div class="kv"><span class="k"><b>${App.fa(i+1)}. ${App.esc(t.title)}</b><br>
+          <span class="tiny">${App.esc(t.prompt)}</span></span>
+          <span class="v"><button class="btn btn-ghost btn-sm" onclick="noteTask('${App.esc(t.title)}')">ثبت یادداشت</button></span>
+        </div>`).join('') || '<p class="tiny">تسکی ندارد.</p>'}</div>
+
+      <div class="sec">پروتوتایپ</div>
+      <p class="tiny" style="margin-bottom:8px">در جلسهٔ حضوری روی گوشی خودِ شرکت‌کننده باز کنید؛
+        این نسخه فقط برای مرور خودتان است.</p>
+      <a class="btn btn-line btn-sm" href="${App.esc(S.prototypeUrl)}" target="_blank">باز کردن پروتوتایپ</a>
+    </div>
+
+    <div class="col-notes">
+      <div class="card">
+        <h3>ثبت شواهد</h3>
+        <p class="tiny" style="margin:5px 0 10px" id="tag-hint"></p>
+        <div class="tagpick" id="tags"></div>
+        <textarea class="input" id="nt" rows="3" placeholder="Ctrl+Enter برای ثبت"></textarea>
+        <button class="btn btn-primary btn-block btn-sm" style="margin-top:8px" onclick="addNote()">ثبت</button>
+        <div style="max-height:320px;overflow:auto;margin-top:12px" id="notes"></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3>پایان جلسه</h3>
+        <p class="tiny" style="margin:5px 0 10px">جلسه را ببندید و نتیجه را نگه دارید.</p>
+        <div class="row-btns">
+          <button class="btn btn-primary btn-sm" onclick="endSession()">پایان و دانلود</button>
+          <button class="btn btn-line btn-sm" onclick="copySession()">کپی نتیجه</button>
+        </div>
+        <p class="tiny" id="end-msg" style="margin-top:8px"></p>
+      </div>
+    </div>
+  </div>`;
+
+  App.$('tags').innerHTML = TAGS.map(t =>
+    `<button class="chip" data-t="${t.id}" aria-pressed="${t.id === tag}">${t.label}</button>`).join('');
+  App.$$('#tags .chip').forEach(b => b.onclick = () => {
+    tag = b.dataset.t;
+    App.$$('#tags .chip').forEach(o => o.setAttribute('aria-pressed', String(o.dataset.t === tag)));
+    hint();
+  });
+  hint();
+  App.$('nt').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addNote(); }
+  });
+  paintSteps(); paintNotes();
+}
+
+const hint = () => App.$('tag-hint').textContent = TAGS.find(t => t.id === tag).hint;
+
+function paintSteps(){
+  App.$('steps').innerHTML = STEPS.map((s, i) => `<div class="stepcard" data-on="${i === step}">
+    <div class="hd" onclick="step=${i};paintSteps()">
+      <div class="n num">${App.fa(i + 1)}</div>
+      <div class="t">${App.esc(s.t)}</div>
+      <div class="tiny">${App.esc(s.m)}</div>
+    </div>
+    ${i === step ? `<div class="body">${App.esc(s.body)}
+      <div style="margin-top:9px">${s.asks.map(a =>
+        `<div style="padding:7px 11px;background:var(--surface-2);border-radius:8px;margin-bottom:5px;color:var(--ink)">
+          «${App.esc(a)}»
+          <button class="chip" style="padding:2px 8px;font-size:10.5px;margin-inline-start:6px"
+            onclick="event.stopPropagation();askNote(${JSON.stringify(a).replace(/"/g,'&quot;')})">پرسیدم</button>
+        </div>`).join('')}</div>
+      <div class="tiny" style="margin-top:8px"><b>ثبت کنید:</b> ${App.esc(s.rec)}</div>` : ''}
+  </div>`).join('');
+}
+
+/* ── notes ──────────────────────────────────────────────────────── */
+function stamp(){ return t0 ? Date.now() - t0 : 0; }
+function push(tagId, text){
+  sess.notes.push({ t: stamp(), tag: tagId, text, step: STEPS[step].t });
+  App.saveSession(sess); paintNotes();
+}
+window.addNote = () => {
+  const v = App.$('nt').value.trim(); if (!v) return;
+  push(tag, v); App.$('nt').value = ''; App.$('nt').focus();
+};
+window.askNote  = (q) => push('asked', 'پرسیده شد: ' + q);
+window.noteTask = (t) => { App.$('nt').value = '[' + t + '] '; App.$('nt').focus(); };
+
+function paintNotes(){
+  const host = App.$('notes');
+  if (!sess.notes.length) { host.innerHTML = '<p class="tiny">هنوز یادداشتی ثبت نشده.</p>'; return; }
+  host.innerHTML = [...sess.notes].reverse().map((n, ri) => {
+    const i = sess.notes.length - 1 - ri;
+    const meta = TAGS.find(t => t.id === n.tag);
+    return `<div class="noterow">
+      <span class="t num">${App.mmss(n.t)}</span>
+      <span class="badge ${meta ? meta.cls : 'b-mute'}">${meta ? meta.label : 'سؤال'}</span>
+      <span style="flex:1">${App.esc(n.text)}</span>
+      <button class="x" onclick="sess.notes.splice(${i},1);App.saveSession(sess);paintNotes()">×</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── timer ──────────────────────────────────────────────────────── */
+window.toggleRun = () => {
+  const b = App.$('run');
+  if (tick) { clearInterval(tick); tick = null; b.textContent = 'ادامه'; return; }
+  if (!t0) t0 = Date.now();
+  b.textContent = 'مکث';
+  tick = setInterval(() => App.$('clk').textContent = App.mmss(Date.now() - t0), 500);
+};
+
+/* ── finish ─────────────────────────────────────────────────────── */
+function seal(){
+  sess.endedAt = new Date().toISOString();
+  sess.durationMs = t0 ? Date.now() - t0 : 0;
+  sess.completed = true;
+  App.saveSession(sess);
+  return sess;
+}
+window.endSession = async () => {
+  const s = seal();
+  App.download(s.studyId + '.' + s.code + '.json', JSON.stringify(s, null, 2));
+  App.$('end-msg').textContent = 'ذخیره شد. برای دیدن جمع‌بندی به «نتایج» بروید.';
+  if (S.settings?.webhook) await App.postWebhook(S.settings.webhook, s);
+};
+window.copySession = async () => {
+  const ok = await App.copy(JSON.stringify(seal()));
+  App.$('end-msg').textContent = ok ? 'کپی شد ✓' : 'کپی نشد — از دکمهٔ دانلود استفاده کنید.';
+};
+</script>
+</body>
+</html>
