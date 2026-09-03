@@ -353,9 +353,11 @@ window.save = () => {
   if (!D.prototypeUrl) { msg.textContent = 'آدرس پروتوتایپ لازم است.'; return; }
   if (!D.tasks.length) { msg.textContent = 'حداقل یک تسک لازم است.'; return; }
   App.saveStudy(D);
-  const link = location.href.replace(/\/[^\/]*$/, '/') + 'run.html?id=' + encodeURIComponent(D.id);
-  msg.innerHTML = `ذخیره شد ✓ &nbsp; <a href="study.html?id=${encodeURIComponent(D.id)}">صفحهٔ مطالعه</a>
-    &nbsp;·&nbsp; <a href="${App.esc(link)}" target="_blank">باز کردن جلسه</a>`;
+  const link = App.shareLink(D, 'run.html');
+  msg.innerHTML = `ذخیره شد ✓ &nbsp;
+    <a href="study.html?id=${encodeURIComponent(D.id)}">صفحهٔ مطالعه</a> &nbsp;·&nbsp;
+    <a href="${App.esc(link)}" target="_blank">باز کردن جلسه</a>
+    <br><span style="color:var(--ink-3)">لینک اشتراک‌گذاری کل مطالعه را در خودش دارد و روی هر دستگاهی باز می‌شود.</span>`;
 };
 window.exportStudy = () => {
   collect(); const c = { ...D }; delete c._source;

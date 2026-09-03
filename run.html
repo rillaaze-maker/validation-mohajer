@@ -58,12 +58,20 @@ const stage = App.$('stage');
 const RX = () => App.qs('skip') === '1';
 
 (async function init(){
-  const id = App.qs('id');
-  S = id ? await App.loadStudy(id) : null;
-  if (!S) { stage.innerHTML = `<div class="center"><h2>این جلسه در دسترس نیست</h2>
-    <p class="lead" style="margin-top:8px">لینک را دوباره از تسهیل‌گر بگیرید.</p></div>`; return; }
+  const packed = App.qs('s'), id = App.qs('id');
+  S = packed ? App.unpackStudy(packed) : (id ? await App.loadStudy(id) : null);
+  if (!S) {
+    /* The common cause is an old-style link: it carried only a study id, and
+       studies built in the browser exist only on the machine that built them. */
+    stage.innerHTML = `<div class="center"><h2>این جلسه در دسترس نیست</h2>
+      <p class="lead" style="margin-top:8px">
+        این لینک قدیمی است و فقط روی کامپیوتری که مطالعه در آن ساخته شده باز می‌شود.
+        از تسهیل‌گر بخواهید لینک تازه را بفرستد.</p></div>`;
+    return;
+  }
   document.title = S.name + ' · جلسهٔ تست';
   sess = App.newSession(S.id, App.qs('mode') || 'unmoderated');
+  sess.studyName = S.name;
   render();
 })();
 

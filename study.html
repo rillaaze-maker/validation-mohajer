@@ -24,7 +24,9 @@ const RISK = { 'very-high':'خیلی بالا','high':'بالا','medium-high':'
   }
 
   const base = location.href.replace(/\/[^\/]*$/, '/');
-  const runLink = base + 'run.html?id=' + encodeURIComponent(s.id);
+  const runLink = App.shareLink(s, 'run.html');
+  const conLink = App.shareLink(s, 'console.html');
+  const portable = s._source !== 'bundled';
   const sessions = App.allSessions().filter(x => x.studyId === s.id);
   const done = sessions.filter(x => x.endedAt);
   const qualified = sessions.filter(x => x.screener?.qualified === true).length;
@@ -42,7 +44,9 @@ const RISK = { 'very-high':'خیلی بالا','high':'بالا','medium-high':'
     <div class="grid c2">
       <div class="card">
         <h3>لینک شرکت‌کننده</h3>
-        <p class="tiny" style="margin:6px 0 10px">این را برای شرکت‌کننده بفرستید. اول غربال می‌شود، بعد وارد جلسه.</p>
+        <p class="tiny" style="margin:6px 0 10px">${portable
+           ? 'کل مطالعه داخل خودِ لینک است، پس روی هر دستگاهی باز می‌شود — بلند است، همان‌طور کپی کنید.'
+           : 'این را برای شرکت‌کننده بفرستید.'}</p>
         <input class="input num" id="lnk" readonly value="${App.esc(runLink)}" style="font-size:12px">
         <div class="row-btns" style="margin-top:9px">
           <button class="btn btn-primary btn-sm" onclick="cp()">کپی لینک</button>
@@ -53,7 +57,7 @@ const RISK = { 'very-high':'خیلی بالا','high':'بالا','medium-high':'
       <div class="card">
         <h3>کنسول تسهیل‌گر</h3>
         <p class="tiny" style="margin:6px 0 10px">برای جلسهٔ حضوری یا آنلاین: اسکریپت، زمان‌سنج و ثبت شواهد در حین جلسه.</p>
-        <a class="btn btn-brand btn-sm" href="console.html?id=${encodeURIComponent(s.id)}">شروع جلسهٔ با تسهیل‌گر</a>
+        <a class="btn btn-brand btn-sm" href="${App.esc(conLink)}">شروع جلسهٔ با تسهیل‌گر</a>
       </div>
     </div>
 

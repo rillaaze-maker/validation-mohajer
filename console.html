@@ -104,8 +104,8 @@ const DONT = ['«داریم اعتماد را تست می‌کنیم.»',
 let S = null, sess = null, t0 = null, tick = null, step = 0, tag = 'behaviour';
 
 (async function(){
-  const id = App.qs('id');
-  S = id ? await App.loadStudy(id) : null;
+  const packed = App.qs('s'), id = App.qs('id');
+  S = packed ? App.unpackStudy(packed) : (id ? await App.loadStudy(id) : null);
   const m = App.$('main');
   if (!S) { m.innerHTML = `<div class="wrap"><div class="empty"><h3>مطالعه پیدا نشد</h3>
     <a class="btn btn-line" href="index.html" style="margin-top:12px">فهرست مطالعه‌ها</a></div></div>`; return; }
